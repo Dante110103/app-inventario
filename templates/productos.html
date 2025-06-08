@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Productos{% endblock %}
+
+{% block content %}
+    <h1>Gestión de Productos</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flashes">
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <div class="container">
+        <div class="column">
+            <h2>Añadir Nuevo Producto</h2>
+            <form action="{{ url_for('procesar_agregado_producto') }}" method="post">
+                <label>Nombre:</label>
+                <input type="text" name="nombre" required>
+                <label>Código de Barras:</label>
+                <input type="text" name="codigo_barras">
+                <label>Precio de Venta ($):</label>
+                <input type="number" step="any" name="precio_venta" required>
+                <label>Stock Inicial:</label>
+                <input type="number" name="stock" value="0" required>
+                <button type="submit" class="btn-add">Añadir Producto</button>
+            </form>
+        </div>
+        <div class="column" style="flex: 2;">
+            <h2>Inventario de Productos</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th style="width: 180px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for producto in productos %}
+                    <tr class="{% if producto['stock'] == 0 %}stock-agotado{% elif producto['stock'] <= 5 %}stock-bajo{% endif %}">
+                        <td>{{ producto['id'] }}</td>
+                        <td>{{ producto['nombre'] }}</td>
+                        <td>${{ "%.0f"|format(producto['precio_venta']|float) }}</td>
+                        <td>{{ producto['stock'] }}</td>
+                        <td>
+                            <a class="btn-edit" href="{{ url_for('pagina_editar_producto', id=producto['id']) }}">Editar</a>
+                            <form action="{{ url_for('procesar_eliminado_producto') }}" method="post" onsubmit="return confirm('¿Estás seguro?');" style="display:inline;box-shadow:none;padding:0;margin:0;">
+                                <input type="hidden" name="id_producto" value="{{ producto['id'] }}">
+                                <button type="submit" class="btn-delete">Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5">No hay productos en el inventario.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

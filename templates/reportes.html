@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Reportes Generales{% endblock %}
+
+{% block content %}
+    <h1>Reportes Generales</h1>
+    
+    <div class="report-section">
+        <h2>Reporte del Día (Hoy)</h2>
+        <div class="total-general">
+            Total General de Hoy: ${{ "%.0f"|format(total_general_hoy|float) }}
+        </div>
+
+        <h3>Ventas de Productos de Hoy (Total: ${{ "%.0f"|format(total_productos_hoy|float) }})</h3>
+        <table>
+            <thead><tr><th>Nombre</th><th>Cantidad</th><th>Precio Total</th><th>Fecha</th></tr></thead>
+            <tbody>
+                {% for venta in ventas_productos_hoy %}
+                <tr><td>{{ venta['nombre'] }}</td><td>{{ venta['cantidad'] }}</td><td>${{ "%.0f"|format(venta['precio_total']|float) }}</td><td>{{ venta['fecha_venta'].strftime('%Y-%m-%d %H:%M:%S') }}</td></tr>
+                {% else %}
+                <tr><td colspan="4" style="text-align: center;">No hay ventas de productos para mostrar hoy.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h3 style="margin-top: 30px;">Ventas de Servicios de Hoy (Total: ${{ "%.0f"|format(total_servicios_hoy|float) }})</h3>
+        <table>
+            <thead><tr><th>Servicio</th><th>Valor</th><th>Fecha</th></tr></thead>
+            <tbody>
+                {% for venta_s in ventas_servicios_hoy %}
+                <tr><td>{{ venta_s['nombre'] }}</td><td>${{ "%.0f"|format(venta_s['valor_venta']|float) }}</td><td>{{ venta_s['fecha_venta'].strftime('%Y-%m-%d %H:%M:%S') }}</td></tr>
+                {% else %}
+                <tr><td colspan="3" style="text-align: center;">No hay ventas de servicios para mostrar hoy.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h3 style="margin-top: 30px;">Ventas de Streaming de Hoy (Total: ${{ "%.0f"|format(total_streaming_hoy|float) }})</h3>
+        <table>
+            <thead><tr><th>Cuenta</th><th>Valor</th><th>Fecha</th></tr></thead>
+            <tbody>
+                {% for venta_st in ventas_streaming_hoy %}
+                <tr><td>{{ venta_st['nombre'] }}</td><td>${{ "%.0f"|format(venta_st['valor_venta']|float) }}</td><td>{{ venta_st['fecha_venta'].strftime('%Y-%m-%d %H:%M:%S') }}</td></tr>
+                {% else %}
+                <tr><td colspan="3" style="text-align: center;">No hay ventas de streaming para mostrar hoy.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <hr>
+
+    <div class="report-section">
+        <h2>Historial de Cierres Diarios</h2>
+        <table>
+            <thead><tr><th>Fecha</th><th>Total Vendido ese Día</th></tr></thead>
+            <tbody>
+                {% for dia in historial %}
+                <tr><td>{{ dia['dia'] }}</td><td>${{ "%.0f"|format(dia['total_dia']|float) }}</td></tr>
+                {% else %}
+                <tr><td colspan="2">No hay historial de ventas de días anteriores.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

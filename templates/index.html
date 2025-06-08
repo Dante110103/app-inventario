@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Punto de Venta{% endblock %}
+
+{% block content %}
+<h1>Punto de Venta</h1>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li>{{ message }}</li>{% endfor %}</ul>{% endif %}
+{% endwith %}
+
+<div class="container">
+
+    <div class="column" style="flex: 1;">
+        <h3>Añadir al Ticket</h3>
+        <form action="{{ url_for('agregar_al_carrito') }}" method="post">
+            <input type="hidden" name="tipo" value="producto">
+            <label>Producto:</label>
+            <select name="id_producto" required>
+                <option value="">-- Selecciona un producto --</option>
+                {% for p in productos %}
+                    <option value="{{ p['id'] }}">{{ p['nombre'] }} (Precio: ${{ "%.0f"|format(p['precio_venta']|float) }}) (Stock: {{ p['stock'] }})</option>
+                {% endfor %}
+            </select>
+            <label>Cantidad:</label>
+            <input type="number" name="cantidad" value="1" min="1" required>
+            <button type="submit" class="btn-add">Añadir Producto</button>
+        </form>
+        <form action="{{ url_for('agregar_al_carrito') }}" method="post">
+            <input type="hidden" name="tipo" value="servicio">
+            <label>Servicio:</label>
+            <select name="id_servicio" required>
+                <option value="">-- Selecciona un servicio --</option>
+                {% for s in servicios %}<option value="{{ s['id'] }}">{{ s['nombre'] }}</option>{% endfor %}
+            </select>
+            <label>Valor ($):</label>
+            <input type="number" step="100" name="valor" required>
+            <button type="submit" class="btn-add">Añadir Servicio</button>
+        </form>
+        <form action="{{ url_for('agregar_al_carrito') }}" method="post">
+            <input type="hidden" name="tipo" value="streaming">
+            <label>Cuenta de Streaming:</label>
+            <select name="id_streaming" required>
+                <option value="">-- Selecciona --</option>
+                {% for s in streaming %}<option value="{{ s['id'] }}">{{ s['nombre'] }} (Precio: ${{ "%.0f"|format(s['precio_mensual']|float) }})</option>{% endfor %}
+            </select>
+            <button type="submit" class="btn-add">Añadir Streaming</button>
+        </form>
+    </div>
+
+    <div class="column" style="flex: 2;">
+        <h3>Ticket de Venta Actual</h3>
+        <table>
+            <thead><tr><th>Ítem</th><th>Cantidad</th><th>Vlr. Unitario</th><th>Subtotal</th><th>Acción</th></tr></thead>
+            <tbody>
+                {% for item in carrito %}
+                <tr>
+                    <td>{{ item['nombre'] }}</td>
+                    <td>{{ item['cantidad'] }}</td>
+                    <td>${{ "%.0f"|format(item['precio_unitario']|float) }}</td>
+                    <td>${{ "%.0f"|format(item['subtotal']|float) }}</td>
+                    <td>
+                        <a href="{{ url_for('quitar_del_carrito', item_index=loop.index0) }}" class="btn-delete" style="font-size: 0.8em; padding: 4px 8px;" onclick="return confirm('¿Quitar este ítem del ticket?');">Quitar</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" style="text-align: center;">El ticket está vacío</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if carrito %}
+            <div class="ticket-total">TOTAL: ${{ "%.0f"|format(total_carrito|float) }}</div>
+            <div class="ticket-actions">
+                <a href="{{ url_for('limpiar_carrito') }}" class="btn-clear">Limpiar Ticket</a>
+                <button type="button" class="btn-finalize" onclick="abrirModalPago({{ total_carrito }})">FINALIZAR VENTA</button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<hr style="margin-top: 40px; margin-bottom: 40px; border-style: dashed;">
+
+<h2>Inventario de Referencia</h2>
+<table>
+    <thead>
+        <tr><th>ID</th><th>Nombre</th><th>Código de Barras</th><th>Precio</th><th>Stock</th></tr>
+    </thead>
+    <tbody>
+        {% for producto in productos %}
+        <tr class="{% if producto['stock'] == 0 %}stock-agotado{% elif producto['stock'] <= 5 %}stock-bajo{% endif %}">
+            <td>{{ producto['id'] }}</td>
+            <td>{{ producto['nombre'] }}</td>
+            <td>{{ producto['codigo_barras'] }}</td>
+            <td>${{ "%.0f"|format(producto['precio_venta']|float) }}</td>
+            <td>{{ producto['stock'] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

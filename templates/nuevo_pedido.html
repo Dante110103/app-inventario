@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Reporte para Nuevo Pedido{% endblock %}
+
+{% block content %}
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>Reporte para Nuevo Pedido (Stock Bajo)</h1>
+        <button class="no-imprimir btn-add" onclick="window.print()">
+            🖨️ Imprimir Reporte
+        </button>
+    </div>
+
+    <p>Lista de productos con <strong>5 unidades o menos</strong> en inventario, ordenados por urgencia.</p>
+
+    {% if not productos_a_pedir %}
+        <div class="flashes" style="background-color: #d4edda; color: #155724; border-color: #c3e6cb;">
+            ¡Felicidades! No hay productos con stock bajo en este momento.
+        </div>
+    {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Stock Actual</th>
+                    <th>Sugerencia de Pedido</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for producto in productos_a_pedir %}
+                <tr class="{% if producto['stock'] == 0 %}stock-agotado{% else %}stock-bajo{% endif %}">
+                    <td>{{ producto['id'] }}</td>
+                    <td>{{ producto['nombre'] }}</td>
+                    <td>{{ producto['stock'] }}</td>
+                    <td class="no-imprimir"><input type="number" min="0" placeholder="Cantidad a pedir..."></td>
+                    <td class="solo-imprimir" style="display: none; border-bottom: 1px dotted #333; height: 30px;"></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <script>
+        // Esta sección es para que la columna 'Sugerencia de Pedido' se vea mejor al imprimir
+        const celdasImprimir = document.querySelectorAll('.solo-imprimir');
+        const celdasNoImprimir = document.querySelectorAll('.no-imprimir');
+        // Usamos los estilos de impresión que ya definimos en base.html
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @media print {
+                .solo-imprimir {
+                    display: table-cell !important;
+                }
+                .no-imprimir input {
+                    display: none;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+{% endblock %}

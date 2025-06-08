@@ -1,0 +1,13 @@
+# Archivos de caché de Python
+__pycache__/
+*.pyc
+
+# Entorno Virtual
+venv/
+
+# Base de datos (es una buena práctica no subirla, ya que cada entorno puede tener su propia data)
+inventario_web.db
+*.db-journal
+
+# Archivos del editor
+.vscode/

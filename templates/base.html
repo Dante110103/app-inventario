@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %} - Gestor de Inventario</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 2em; background-color: #f8f9fa; color: #212529;}
+        h1, h2, h3 { color: #007bff; }
+        a { color: #007bff; text-decoration: none; font-weight: bold;}
+        a:hover { text-decoration: underline; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; box-shadow: 0 2px 3px rgba(0,0,0,0.1); background-color: white;}
+        th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; vertical-align: middle; }
+        thead { background-color: #007bff; color: white; }
+        tbody tr:nth-child(even) { background-color: #f2f2f2; }
+        tfoot { background-color: #e9ecef; font-weight: bold; }
+        .flashes { list-style: none; padding: 10px; margin-bottom: 20px; border-radius: 5px; background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460;}
+        form { margin-top: 15px; padding: 20px; background-color: white; border-radius: 8px; box-shadow: 0 2px 3px rgba(0,0,0,0.1); }
+        input, select { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box; }
+        button { padding: 10px 15px; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; }
+        button:hover { opacity: 0.9; }
+        .nav-links { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #dee2e6; }
+        .nav-links a { margin-right: 25px; font-size: 1.1em; }
+        .container { display: flex; gap: 40px; align-items: flex-start; }
+        .column { flex: 1; }
+        .btn-add { background-color: #007bff; }
+        .btn-edit { background-color: #ffc107; color: black; padding: 5px 10px; border-radius: 4px; font-size: 0.9em;}
+        .btn-delete { background-color: #dc3545; color: white; padding: 5px 10px; font-size: 0.9em; }
+        .btn-finalize { background-color: #28a745; }
+        .btn-clear { background-color: #6c757d; color: white; padding: 10px 15px; border-radius: 4px; text-align: center; display: inline-block;}
+        .ticket-total { font-size: 1.5em; font-weight: bold; text-align: right; margin-top: 10px; color: #343a40; }
+        .ticket-actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
+        .total-general { text-align: right; font-size: 2.2em; font-weight: bold; margin: 20px 0; padding: 20px; background-color: #e8f5e9; color: #1b5e20; border-radius: 8px; border-left: 10px solid #4caf50; }
+        .stock-bajo { background-color: #fff3cd !important; }
+        .stock-agotado { background-color: #f8d7da !important; color: #721c24; font-weight: bold; text-decoration: line-through; }
+        
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
+        .modal-content { background-color: #fefefe; margin: 15% auto; padding: 30px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); animation: animatetop 0.4s; }
+        @keyframes animatetop { from {top: -300px; opacity: 0} to {top: 0; opacity: 1} }
+        .modal-content input { font-size: 1.2em; }
+        .modal-content .cambio { font-size: 1.8em; font-weight: bold; color: #28a745; margin-top: 15px; }
+        .modal-actions { margin-top: 20px; display: flex; justify-content: space-between; }
+
+        @media print {
+            body { font-family: 'Times New Roman', serif; background-color: white; color: black; }
+            .nav-links, .flashes, form, button, .no-imprimir, .ticket-actions, .btn-edit, .btn-delete { display: none !important; }
+            a { text-decoration: none; color: black; }
+            table, th, td { border: 1px solid #666; }
+            h1, h2, h3 { color: black; }
+            main { margin: 0; padding: 0;}
+            hr { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div style="text-align: center; padding: 10px 0; background-color: #fff; border-bottom: 1px solid #dee2e6;">
+            <img src="{{ url_for('static', filename='LOGO.jpg') }}" alt="Logo de la Empresa" style="max-height: 90px; width: auto;">
+        </div>
+    <div class="nav-links no-imprimir">
+        <a href="/">Punto de Venta 🛒</a>
+        <a href="/productos">Gestionar Productos 📦</a>
+        <a href="/servicios">Gestionar Servicios 🛠️</a>
+        <a href="/streaming">Gestionar Streaming 📺</a>
+        <a href="/reportes">Reporte de Ventas 📈</a>
+        <a href="/nuevo_pedido">Hacer Pedido 📝</a>
+    </div>
+    <hr class="no-imprimir">
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <div id="pagoModal" class="modal">
+        <div class="modal-content">
+            <h2>Confirmar Venta</h2>
+            <p>Total a Pagar: <b id="modalTotal" style="font-size: 1.5em; color: #dc3545;"></b></p>
+            <form id="form-finalizar" action="{{ url_for('finalizar_venta') }}" method="post">
+                <label for="dinero_recibido">Dinero Recibido ($):</label>
+                <input type="number" id="dinero_recibido" onkeyup="calcularCambio()" step="100" placeholder="Ej: 50000" autocomplete="off">
+                <div class="cambio">Cambio a devolver: <span id="modalCambio">$0</span></div>
+                <div class="modal-actions">
+                    <button type="button" onclick="cerrarModalPago()" style="background-color: #6c757d;">Cancelar</button>
+                    <button type="submit" id="btnConfirmarPago" class="btn-finalize" disabled>Confirmar Pago</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById('pagoModal');
+        const modalTotalElement = document.getElementById('modalTotal');
+        const dineroRecibidoInput = document.getElementById('dinero_recibido');
+        const modalCambioElement = document.getElementById('modalCambio');
+        const btnConfirmar = document.getElementById('btnConfirmarPago');
+        let totalAPagar = 0;
+
+        function abrirModalPago(total) {
+            totalAPagar = total;
+            modalTotalElement.innerText = '$' + total.toLocaleString('es-CO', {maximumFractionDigits: 0});
+            dineroRecibidoInput.value = '';
+            modalCambioElement.innerText = '$0';
+            btnConfirmar.disabled = true;
+            modal.style.display = 'block';
+            dineroRecibidoInput.focus();
+        }
+
+        function cerrarModalPago() {
+            modal.style.display = 'none';
+        }
+
+        function calcularCambio() {
+            const recibido = parseFloat(dineroRecibidoInput.value) || 0;
+            if (isNaN(recibido)) { return; }
+            const cambio = recibido - totalAPagar;
+            if (cambio >= 0) {
+                modalCambioElement.innerText = 'Cambio: $' + cambio.toLocaleString('es-CO', {maximumFractionDigits: 0});
+                btnConfirmar.disabled = false;
+            } else {
+                modalCambioElement.innerText = 'Faltan $' + (cambio * -1).toLocaleString('es-CO', {maximumFractionDigits: 0});
+                btnConfirmar.disabled = true;
+            }
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                cerrarModalPago();
+            }
+        }
+    </script>
+</body>
+</html>

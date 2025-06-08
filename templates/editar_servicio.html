@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Servicio</title>
+</head>
+<body>
+    <h1>Editar Servicio: {{ servicio['nombre'] }}</h1>
+    <p><a href="/servicios">← Cancelar y Volver</a></p>
+    <form action="/servicio/actualizar" method="post">
+        <input type="hidden" name="id" value="{{ servicio['id'] }}">
+        <label for="nombre">Nombre del Servicio:</label>
+        <input type="text" id="nombre" name="nombre" value="{{ servicio['nombre'] }}" required>
+        <button type="submit">Guardar Cambios</button>
+    </form>
+</body>
+</html>

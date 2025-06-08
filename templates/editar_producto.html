@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Producto</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; background-color: #f8f9fa;}
+        h1 { color: #007bff; }
+        a { color: #007bff; text-decoration: none; font-weight: bold;}
+        form { margin-top: 15px; padding: 20px; background-color: white; border-radius: 8px; max-width: 500px;}
+        input { width: 95%; padding: 8px; margin-bottom: 10px; border: 1px solid #ced4da; border-radius: 4px; }
+        button { padding: 10px 15px; color: white; background-color: #28a745; border: none; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Editar Producto: {{ producto['nombre'] }}</h1>
+    <p><a href="/productos">← Cancelar y Volver a la Gestión de Productos</a></p>
+
+    <form action="/producto/actualizar" method="post">
+        <input type="hidden" name="id" value="{{ producto['id'] }}">
+
+        <label for="nombre">Nombre del Producto:</label>
+        <input type="text" id="nombre" name="nombre" value="{{ producto['nombre'] }}" required>
+        
+        <label for="codigo_barras">Código de Barras:</label>
+        <input type="text" id="codigo_barras" name="codigo_barras" value="{{ producto['codigo_barras'] }}">
+
+        <label for="precio_venta">Precio de Venta:</label>
+        <input type="number" step="1" id="precio_venta" name="precio_venta" value="{{ producto['precio_venta'] }}" required>
+
+        <label for="stock">Stock Actual:</label>
+        <input type="number" id="stock" name="stock" value="{{ producto['stock'] }}" required>
+        
+        <button type="submit">Guardar Cambios</button>
+    </form>
+</body>
+</html>

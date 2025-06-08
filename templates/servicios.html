@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Servicios{% endblock %}
+
+{% block content %}
+    <h1>Gestión de Servicios</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}<ul class="flashes">{% for category, message in messages %}<li>{{ message }}</li>{% endfor %}</ul>{% endif %}
+    {% endwith %}
+
+    <div class="container">
+        <div class="column">
+            <h2>Añadir Nuevo Servicio</h2>
+            <form action="{{ url_for('procesar_agregado_servicio') }}" method="post">
+                <label for="nombre_servicio">Nombre del Servicio:</label>
+                <input type="text" id="nombre_servicio" name="nombre_servicio" required>
+                <button type="submit" class="btn-add">Añadir Servicio</button>
+            </form>
+        </div>
+        <div class="column" style="flex: 2;">
+            <h2>Servicios Existentes</h2>
+            <table>
+                <thead><tr><th>ID</th><th>Nombre</th><th style="width: 180px;">Acciones</th></tr></thead>
+                <tbody>
+                    {% for servicio in servicios %}
+                    <tr>
+                        <td>{{ servicio['id'] }}</td>
+                        <td>{{ servicio['nombre'] }}</td>
+                        <td>
+                            <a class="btn-edit" href="{{ url_for('pagina_editar_servicio', id=servicio['id']) }}">Editar</a>
+                            <form action="{{ url_for('procesar_eliminado_servicio') }}" method="post" onsubmit="return confirm('¿Estás seguro?');" style="display:inline;box-shadow:none;padding:0;margin:0;">
+                                <input type="hidden" name="id_servicio" value="{{ servicio['id'] }}">
+                                <button type="submit" class="btn-delete">Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="3">No hay servicios para mostrar.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
