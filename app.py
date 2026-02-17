@@ -1,7 +1,8 @@
-# app.py (Versión Final, Completa y Definitiva)
+venv\Scripts\activate# app.py (Versión Final, Completa y Definitiva)
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import database
 import os
+from flask import jsonify
 
 app = Flask(__name__)
 app.secret_key = 'clave_final_12345_super_segura_y_aleatoria'
@@ -64,6 +65,24 @@ def pagina_editar_servicio(id):
 def pagina_editar_streaming(id):
     cuenta = database.obtener_streaming_por_id(id)
     return render_template('editar_streaming.html', cuenta=cuenta) if cuenta else redirect(url_for('pagina_gestion_streaming'))
+
+@app.route('/buscar_productos')
+def buscar_productos():
+    q = request.args.get('q', '').strip()
+    if not q:
+        return jsonify([])
+
+    productos = database.buscar_productos(q)
+
+    return jsonify([
+        {
+            "id": p["id"],
+            "nombre": p["nombre"],
+            "precio": p["precio_venta"],
+            "stock": p["stock"]
+        }
+        for p in productos
+    ])
 
 # --- RUTAS DE PROCESAMIENTO (ACCIONES) ---
 @app.route('/agregar_al_carrito', methods=['POST'])

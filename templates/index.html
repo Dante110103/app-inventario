@@ -6,52 +6,74 @@
 <h1>Punto de Venta</h1>
 
 {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li>{{ message }}</li>{% endfor %}</ul>{% endif %}
+    {% if messages %}
+        <ul class="flashes">
+            {% for category, message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 {% endwith %}
 
 <div class="container">
 
+    <!-- ================= BUSCADOR RÁPIDO ================= -->
+    <div style="width:100%; margin-bottom:20px;">
+        <h3>Buscar Producto (Escáner o Teclado)</h3>
+        <input 
+            type="text" 
+            id="buscador"
+            placeholder="Escanea código o escribe nombre..."
+            style="width:100%; padding:10px; font-size:16px;"
+            autofocus
+        >
+        <div id="resultados_busqueda" style="background:#fff; border:1px solid #ccc;"></div>
+    </div>
+    <!-- ==================================================== -->
+
     <div class="column" style="flex: 1;">
-        <h3>Añadir al Ticket</h3>
+        <h3>Añadir al Ticket (Manual)</h3>
+
+        <!-- FORMULARIO OCULTO AUTOMÁTICO -->
+        <form id="form_auto_add" action="{{ url_for('agregar_al_carrito') }}" method="post" style="display:none;">
+            <input type="hidden" name="tipo" value="producto">
+            <input type="hidden" name="id_producto" id="auto_id_producto">
+            <input type="hidden" name="cantidad" value="1">
+        </form>
+
+        <!-- FORMULARIO ORIGINAL (NO SE TOCA) -->
         <form action="{{ url_for('agregar_al_carrito') }}" method="post">
             <input type="hidden" name="tipo" value="producto">
             <label>Producto:</label>
             <select name="id_producto" required>
                 <option value="">-- Selecciona un producto --</option>
                 {% for p in productos %}
-                    <option value="{{ p['id'] }}">{{ p['nombre'] }} (Precio: ${{ "%.0f"|format(p['precio_venta']|float) }}) (Stock: {{ p['stock'] }})</option>
+                    <option value="{{ p['id'] }}">
+                        {{ p['nombre'] }} 
+                        (Precio: ${{ "%.0f"|format(p['precio_venta']|float) }}) 
+                        (Stock: {{ p['stock'] }})
+                    </option>
                 {% endfor %}
             </select>
             <label>Cantidad:</label>
             <input type="number" name="cantidad" value="1" min="1" required>
             <button type="submit" class="btn-add">Añadir Producto</button>
         </form>
-        <form action="{{ url_for('agregar_al_carrito') }}" method="post">
-            <input type="hidden" name="tipo" value="servicio">
-            <label>Servicio:</label>
-            <select name="id_servicio" required>
-                <option value="">-- Selecciona un servicio --</option>
-                {% for s in servicios %}<option value="{{ s['id'] }}">{{ s['nombre'] }}</option>{% endfor %}
-            </select>
-            <label>Valor ($):</label>
-            <input type="number" step="100" name="valor" required>
-            <button type="submit" class="btn-add">Añadir Servicio</button>
-        </form>
-        <form action="{{ url_for('agregar_al_carrito') }}" method="post">
-            <input type="hidden" name="tipo" value="streaming">
-            <label>Cuenta de Streaming:</label>
-            <select name="id_streaming" required>
-                <option value="">-- Selecciona --</option>
-                {% for s in streaming %}<option value="{{ s['id'] }}">{{ s['nombre'] }} (Precio: ${{ "%.0f"|format(s['precio_mensual']|float) }})</option>{% endfor %}
-            </select>
-            <button type="submit" class="btn-add">Añadir Streaming</button>
-        </form>
     </div>
 
+    <!-- ================= TICKET ================= -->
     <div class="column" style="flex: 2;">
         <h3>Ticket de Venta Actual</h3>
         <table>
-            <thead><tr><th>Ítem</th><th>Cantidad</th><th>Vlr. Unitario</th><th>Subtotal</th><th>Acción</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>Ítem</th>
+                    <th>Cantidad</th>
+                    <th>Vlr. Unitario</th>
+                    <th>Subtotal</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
             <tbody>
                 {% for item in carrito %}
                 <tr>
@@ -60,30 +82,54 @@
                     <td>${{ "%.0f"|format(item['precio_unitario']|float) }}</td>
                     <td>${{ "%.0f"|format(item['subtotal']|float) }}</td>
                     <td>
-                        <a href="{{ url_for('quitar_del_carrito', item_index=loop.index0) }}" class="btn-delete" style="font-size: 0.8em; padding: 4px 8px;" onclick="return confirm('¿Quitar este ítem del ticket?');">Quitar</a>
+                        <a href="{{ url_for('quitar_del_carrito', item_index=loop.index0) }}"
+                           class="btn-delete"
+                           onclick="return confirm('¿Quitar este ítem del ticket?');">
+                           Quitar
+                        </a>
                     </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="5" style="text-align: center;">El ticket está vacío</td></tr>
+                <tr>
+                    <td colspan="5" style="text-align:center;">
+                        El ticket está vacío
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
+
         {% if carrito %}
-            <div class="ticket-total">TOTAL: ${{ "%.0f"|format(total_carrito|float) }}</div>
+            <div class="ticket-total">
+                TOTAL: ${{ "%.0f"|format(total_carrito|float) }}
+            </div>
             <div class="ticket-actions">
-                <a href="{{ url_for('limpiar_carrito') }}" class="btn-clear">Limpiar Ticket</a>
-                <button type="button" class="btn-finalize" onclick="abrirModalPago({{ total_carrito }})">FINALIZAR VENTA</button>
+                <a href="{{ url_for('limpiar_carrito') }}" class="btn-clear">
+                    Limpiar Ticket
+                </a>
+                <button type="button"
+                        class="btn-finalize"
+                        onclick="abrirModalPago({{ total_carrito }})">
+                        FINALIZAR VENTA
+                </button>
             </div>
         {% endif %}
     </div>
 </div>
 
-<hr style="margin-top: 40px; margin-bottom: 40px; border-style: dashed;">
+<!-- ================= INVENTARIO ================= -->
+<hr style="margin-top:40px; margin-bottom:40px; border-style:dashed;">
 
 <h2>Inventario de Referencia</h2>
 <table>
     <thead>
-        <tr><th>ID</th><th>Nombre</th><th>Código de Barras</th><th>Precio</th><th>Stock</th></tr>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Código</th>
+            <th>Precio</th>
+            <th>Stock</th>
+        </tr>
     </thead>
     <tbody>
         {% for producto in productos %}
@@ -97,4 +143,57 @@
         {% endfor %}
     </tbody>
 </table>
+
+<!-- ================= JAVASCRIPT BUSCADOR ================= -->
+<script>
+    const buscador = document.getElementById("buscador");
+    const resultados = document.getElementById("resultados_busqueda");
+    
+    buscador.addEventListener("keydown", async function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            const texto = buscador.value.trim();
+            if (!texto) return;
+    
+            const response = await fetch(`/buscar_productos?q=${texto}`);
+            const data = await response.json();
+    
+            if (data.length === 1) {
+                agregarProducto(data[0].id);
+            }
+        }
+    });
+    
+    buscador.addEventListener("input", async function() {
+        const texto = this.value.trim();
+        if (texto.length < 2) {
+            resultados.innerHTML = "";
+            return;
+        }
+    
+        const response = await fetch(`/buscar_productos?q=${texto}`);
+        const data = await response.json();
+    
+        resultados.innerHTML = "";
+    
+        data.forEach(producto => {
+            const div = document.createElement("div");
+            div.className = "resultado-producto";
+            div.innerHTML = `${producto.nombre} - $${producto.precio}`;
+            div.onclick = () => agregarProducto(producto.id);
+            resultados.appendChild(div);
+        });
+    });
+    
+    function agregarProducto(idProducto) {
+        document.getElementById("auto_id_producto").value = idProducto;
+        document.getElementById("form_auto_add").submit();
+        document.getElementById("beep").play();
+    }
+    </script>
+
+    <audio id="beep">
+        <source src="{{ url_for('static', filename='beep.mp3') }}" type="audio/mpeg">
+      </audio>
+
 {% endblock %}
